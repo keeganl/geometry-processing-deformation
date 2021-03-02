@@ -9,6 +9,7 @@
 #include <igl/unproject.h>
 #include <igl/snap_points.h>
 #include <igl/unproject_onto_mesh.h>
+#include <igl/biharmonic_coordinates.h>
 #include <Eigen/Core>
 #include <iostream>
 #include <stack>
@@ -52,6 +53,7 @@ int main(int argc, char *argv[])
 
   Eigen::MatrixXd V,U;
   Eigen::MatrixXi F;
+  Eigen::VectorXi b;
   long sel = -1;
   Eigen::RowVector3f last_mouse;
   igl::min_quad_with_fixed_data<double> biharmonic_data, arap_data;
@@ -101,7 +103,8 @@ R,r      Reset control points
         {
           Eigen::MatrixXd D;
           biharmonic_solve(biharmonic_data,s.CU-s.CV,D);
-          U = V+D;
+          // igl::biharmonic_coordinates(V, F, b, s.CU - s.CV, D);
+          U = V + D;
           break;
         }
         case ARAP:
@@ -232,7 +235,6 @@ R,r      Reset control points
         {
           // Switching to deformation mode
           s.CU = s.CV;
-          Eigen::VectorXi b;
           igl::snap_points(s.CV,V,b);
           // PRECOMPUTATION FOR DEFORMATION
           biharmonic_precompute(V,F,b,biharmonic_data);

@@ -2,10 +2,13 @@
 #include <igl/min_quad_with_fixed.h>
 
 void biharmonic_solve(
-  const igl::min_quad_with_fixed_data<double> & data,
-  const Eigen::MatrixXd & bc,
-  Eigen::MatrixXd & D)
+    const igl::min_quad_with_fixed_data<double> &data,
+    const Eigen::MatrixXd &bc,
+    Eigen::MatrixXd &D)
 {
-  // REPLACE WITH YOUR CODE
-  D = Eigen::MatrixXd::Zero(data.n,3);
+  const int size = data.n;
+  const int dims = bc.cols();
+  // B is n x 1 vector
+  igl::min_quad_with_fixed_solve(data, Eigen::MatrixXd::Zero(size, dims), bc, Eigen::MatrixXd::Zero(0, dims), D);
+  // D = Eigen::MatrixXd::Zero(data.n, 3);
 }
