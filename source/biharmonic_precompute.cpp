@@ -94,33 +94,22 @@ void biharmonic_precompute(
   igl::cotmatrix(V, F, cotLaplacian);
   igl::massmatrix(V, F, igl::MASSMATRIX_TYPE_DEFAULT, massMatrix);
 
+    /*
+    Crouzeix-Ravariant reference
+    Reference pg 7-11 in this 
+    https://cims.nyu.edu/gcl/papers/wardetzky2007dqb.pdf
+    */
+
   // the crouzeix_ravariant versions seem to be num_of_unique_edges*num_of_unique_edges
   // i think they are higher precision as well
+
+  // this is edge based, based on 1/3 of the areas that share that edge. 
   igl::crouzeix_raviart_massmatrix(V, F, M, E, EMAP);
 
 
-  /*
-  Reference pg 7-11 in this 
-  https://cims.nyu.edu/gcl/papers/wardetzky2007dqb.pdf
 
-  Deconstruct this loop for the c_r_cotmatrix
-   factor = 4.0;
-      LI<<0,1,2,1,2,0,0,1,2,1,2,0;
-      LJ<<1,2,0,0,1,2,0,1,2,1,2,0;
-      LV<<2,0,1,2,0,1,2,0,1,2,0,1;
-  for(int f=0;f<m;f++)
-  {
-    for(int c = 0;c<k;c++)
-    {
-      LIJV.emplace_back(
-        EMAP(F2E(f,LI(c)), 0),
-        EMAP(F2E(f,LJ(c)), 0),
-        (c<(k/2)?-1.:1.) * factor *C(f,LV(c)));
-    }
-  }
-  L.resize(E.rows(),E.rows());
-  L.setFromTriplets(LIJV.begin(),LIJV.end());
-  */
+
+  // L_ij = -2* cot(angle between e_i,e_j)
   igl::crouzeix_raviart_cotmatrix(V, F, E, EMAP, L);
 
   igl::normal_derivative(V, F, N);
@@ -139,7 +128,6 @@ void biharmonic_precompute(
 	  Ad.setFromTriplets(AIJV.begin(),AIJV.end());
 	}
 
-  
   {
       std::vector<Eigen::Triplet<double>> ZIJV;
       for(int t =0;t<F.rows();t++)
@@ -167,12 +155,14 @@ void biharmonic_precompute(
 
   Eigen::Matrix<double, Eigen::Dynamic, 1> De;
 
+
+  // this generates DOF vector
   igl::sum(Ad, 2, De);
 
   Eigen::DiagonalMatrix<double, Eigen::Dynamic> De_diag =
 	  De.array().inverse().matrix().asDiagonal();
 
-
+  // this (De_diag * Ad); performs the 1/2 if edge is incident
   K = L * (De_diag * Ad);
   // K = L + N;
 
